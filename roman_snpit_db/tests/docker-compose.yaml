@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: ${DOCKER_ARCHIVE:-ghcr.io/roman-supernova-pit}/snpit-db-postgres:${DOCKER_VERSION:-test20250819}
+    build:
+      context: ../../docker/postgres
+      target: postgres
+    volumes:
+      - type: volume
+        source: postgres_data
+        target: /var/lib/postrgresql/data
+      - type: bind
+        source: secrets
+        target: /secrets
+        read_only: true
+    healthcheck:
+      test: netcat -w 1 localhost 5432 || exit 1
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  shell-nocreatedb:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    image: rknop/roman-snpit-env:cpu
+    volumes:
+      - type: bind
+        source: secrets
+        target: /secrets
+        read_only: true
+      - type: bind
+        source: ../..
+        target: /code
+    working_dir: /code
+    command: tail -f /etc/issue
+
+
+volumes:
+  postgres_data:

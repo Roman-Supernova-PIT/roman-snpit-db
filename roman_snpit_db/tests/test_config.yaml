@@ -1,8 +1,8 @@
 db:
-  host: foo
-  port: foo
-  name: foo
-  user: foo
+  host: postgres
+  port: 5432
+  name: roman_snpit
+  user: postgres
   passwd: null
-  passwd_file: /secrets/dbpasswd
+  passwd_file: /secrets/pgpasswd
   

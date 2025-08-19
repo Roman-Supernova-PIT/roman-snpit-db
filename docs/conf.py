@@ -7,6 +7,7 @@
 import datetime
 import importlib
 import sys
+import pathlib
 import os
 import tomli
 
@@ -17,6 +18,10 @@ import sphinx
 from sphinx.ext.autodoc import AttributeDocumenter
 
 # -- Project information -----------------------------------------------------
+
+# Make sure that roman_snpit_db module can be found
+
+sys.path.insert( 0, str( pathlib.Path( '..' ).resolve() ) )
 
 # to populate metadata from the pyproject.toml file so that changes are picked 
 # up for things in the project section of the toml
@@ -109,6 +114,8 @@ html_theme_options = {
     'logo_text_align': "left",
     'description': "Software developed by the Roman SNPIT",
     'sidebar_width':'250px',
+    'page_width':'75%',
+    'body_max_width':'120ex',
     'show_relbars':True,
 }
 

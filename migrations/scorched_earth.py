@@ -6,7 +6,7 @@ from snpit_utils.logger import SNLogger
 with roman_snpit_db.db.DBCon() as con:
     try:
         for table in roman_snpit_db.db.all_table_names:
-            SNLogger.warning( f"Dropping talbe {table}..." )
+            SNLogger.warning( f"Dropping table {table}..." )
             # Yeah, yeah, there's sort of an SQL injection attack here,
             #   though if somebody can edit the code to modify the
             #   all_table_names variable, they could just as easily edit

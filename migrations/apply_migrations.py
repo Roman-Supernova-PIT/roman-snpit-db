@@ -1,27 +1,27 @@
 import io
-import argparse
 import pathlib
 import hashlib
 import uuid
 import subprocess
 
-from snpit_utils.config import Config
 from snpit_utils.logger import SNLogger
-from roman_snpit_db.db import DBCon
+from roman_snpit_db.db import DBCon, get_connect_info
 
 import psycopg
 
 
 def main():
+    dbhost, dbport, dbname, dbuser, dbpass = get_connect_info()
+
     direc = pathlib.Path( __file__ ).parent
     sqlfiles = list( direc.glob( "*.sql" ) )
     sqlfiles.sort()
 
     with DBCon() as conn:
         try:
-            rows, cols = conn.execute( "SELECT filename,md5sum,applied_time "
-                                       "FROM _migrations_applied "
-                                       "ORDER BY filename" )
+            rows, _cols = conn.execute( "SELECT filename,md5sum,applied_time "
+                                        "FROM _migrations_applied "
+                                        "ORDER BY filename" )
             applied = [ row[0] for row in rows ]
             md5sums = [ row[1] for row in rows ]
             when = [ row[2] for row in rows ]
@@ -56,12 +56,12 @@ def main():
 
         for i in range( len(applied), len(sqlfiles) ):
             SNLogger.info( f"Applying {sqlfiles[i]}..." )
-            rval = subprocess.run( [ "psql", "-h", args.host, "-p", str(args.port), "-U", args.user,
+            rval = subprocess.run( [ "psql", "-h", dbhost, "-p", str(dbport), "-U", dbuser,
                                      "-v", "ON_ERROR_STOP=on",
                                      "-f", sqlfiles[i],
                                      "--single-transaction", "-b",
-                                     args.db ],
-                                   env={ 'PGPASSWORD': args.password },
+                                     dbname ],
+                                   env={ 'PGPASSWORD': dbpass },
                                    capture_output=True )
             if rval.returncode != 0:
                 SNLogger.error( f"Error processing {sqlfiles[i]}:\n{rval.stderr.decode('utf-8')}" )
@@ -70,7 +70,7 @@ def main():
             with open( sqlfiles[i], "rb" ) as ifp:
                 filemd5.update( ifp.read() )
             md5sum = filemd5.hexdigest()
-            conn.execute_nofetch( "INSERT INTO migrations_applied(filename,md5sum) "
+            conn.execute_nofetch( "INSERT INTO _migrations_applied(filename,md5sum) "
                                   "VALUES(%(fn)s,%(md5)s)",
                                   { 'fn': sqlfiles[i].name, 'md5': md5sum } )
             conn.commit()

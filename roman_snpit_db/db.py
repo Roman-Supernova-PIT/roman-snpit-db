@@ -6,10 +6,16 @@
 # (https://github.com/LSSTDESC/FASTDB), which also has a BSD 3-clause license
 # attached to it.
 
+import collections
+import types
+import uuid
+from contextlib import contextmanager
+
+import numpy as np
 import psycopg
 
 from snpit_utils.config import Config
-from snpit_uutils.logger import SNLogger
+from snpit_utils.logger import SNLogger
 
 
 # ======================================================================
@@ -26,15 +32,32 @@ from snpit_uutils.logger import SNLogger
 # is, assuming you've already decided it's safe to drop all your tables,
 # make sure that there are no dependencies that will stop one of the
 # tables on the list from being dropped.
-all_table_names = []
+all_table_names = [ 'campari_lightcurve', 'phrosty_lightcurve', 'summed_image', 'summed_image_component',
+                    'l2image', 'diaobject_classification', 'diaobject_position', 'diaobject',
+                    'provenance_upstream', 'provenance', '_migrations_applied'
+                   ]
 
 # The following two variables are used for debugging, and should be False in production.
-_echoqueries = False
-_alwaysexpain = False
+_echoqueries = True
+_alwaysexplain = False
 
 
 # ======================================================================
 # Databse connection utilities
+
+def get_connect_info():
+    cfg = Config.get()
+    dbhost = cfg.value( 'db.host' )
+    dbport = cfg.value( 'db.port' )
+    dbname = cfg.value( 'db.name' )
+    dbuser = cfg.value( 'db.user' )
+    dbpasswd = cfg.value( 'db.passwd' )
+    if dbpasswd is None:
+        with open( cfg.value( 'db.passwd_file' ) ) as ifp:
+            dbpasswd = ifp.readline().strip()
+
+    return dbhost, dbport, dbname, dbuser, dbpasswd
+
 
 def get_dbcon():
     """Get a database connection.
@@ -44,16 +67,7 @@ def get_dbcon():
     Consider using the DB or DBCon context managers instead of this.
     """
 
-    cfg = Config.get()
-    dbhost = cfg.value( 'db.host' )
-    dbport = cfg.value( 'db.port' )
-    dbname = cfg.value( 'db.name' )
-    dbuser = cfg.value( 'db.user' )
-    dbpasswd = cfg.value( 'db.passwd' )
-    if dbpasswd is None:
-        with open( cfg.value( 'db.passwd_file' ) ) as ifp:
-            dbpasswd = ifp.readline.strip()
-    
+    dbhost, dbport, dbname, dbuser, dbpasswd = get_connect_info()
     conn = psycopg.connect( dbname=dbname, user=dbuser, password=dbpasswd, host=dbhost, port=dbport )
     return conn
 
@@ -113,7 +127,7 @@ class DBCon:
 
     """
 
-    def __init__( self, con, dictcursor=False ):
+    def __init__( self, con=None, dictcursor=False ):
         """Instantiate.
 
         If you use this, you should also use close(), and soon.
@@ -134,7 +148,7 @@ class DBCon:
             passed a non-None con.  The assumption is that there was an
             outer context that originally created the DBCon that will do
             that.
-        
+
           dictcursor : bool, default False
             If True, then the cursor uses psycopg.rows.dict_row as its
             row factory.  execite() will return a list of dictionaries,
@@ -181,7 +195,7 @@ class DBCon:
 
         (This is mainly useful if you want to switch between a
         dictcursor and a regular cursor.)
-        
+
         Parameters
         ----------
           dictcursor : bool, default None
@@ -220,7 +234,7 @@ class DBCon:
     def rollback( self ):
         """Roll back the connection."""
         self.con.rollback()
-        self.remake_cursor( self, self.curcursorisdict )  # ...is this necessary?
+        self.remake_cursor( self.curcursorisdict )  # ...is this necessary?
 
 
     def commit( self ):
@@ -232,7 +246,7 @@ class DBCon:
 
         """
         self.con.commit()
-        self.remake_cursor( self, self.curcursorisdict )  # ...is this necessary?
+        self.remake_cursor( self.curcursorisdict )  # ...is this necessary?
 
 
     def execute_nofetch( self, q, subdict={}, silent=False):
@@ -315,7 +329,7 @@ class DBCon:
 
         This is a really short and stupid function to have this much
         documentation.
-        
+
         Parmaeters
         ----------
            columns: list of string
@@ -548,7 +562,7 @@ class DBBase:
             Instead of passing cols and vals, you can pass the
             properties to be set in the object as named parameters to
             __init__.
-        
+
           _noinit : bool
             Don't actually initialize the object.  Use this if you just
             need an object and don't have any cols or vals to pass right
@@ -977,5 +991,3 @@ class DBBase:
                 cursor.execute( "DROP TABLE temp_bulk_upsert" )
                 con.commit()
                 return ninserted
-
-
