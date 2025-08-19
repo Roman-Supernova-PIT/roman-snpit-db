@@ -1,0 +1,8 @@
+db:
+  host: foo
+  port: foo
+  name: foo
+  user: foo
+  passwd: null
+  passwd_file: /secrets/dbpasswd
+  
