@@ -19,6 +19,7 @@ the github package repository at https://github.com/Roman-Supernova-PIT/roman-sn
    :maxdepth: 1
    :caption: Getting Started
 
+   overview.rst
    installation.rst
    usage.rst
    changes.rst

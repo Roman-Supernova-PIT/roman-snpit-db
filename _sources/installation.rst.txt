@@ -1,12 +1,17 @@
 .. highlight:: shell
 
+.. _installation:
+               
 ============
 Installation
 ============
 
+The roman-snpit-db is composed of two parts (both of which are in this archive).  The first is the database definition and server software.  If you need to install that, see TODO.  The second is the client software used to connect to an existing roman-snpit-db instance.  That's what this document is about.
 
 Stable release
 --------------
+
+(Note: currently, as of this writing, there are no stable releases.)
 
 To install roman-snpit-db, run this command in your terminal:
 
@@ -38,7 +43,7 @@ Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl -OJL https://github.com/Roman-Supernova-PIT/roman_snpit_db/tarball/master
+    $ curl -OJL https://github.com/Roman-Supernova-PIT/roman_snpit_db/tarball/main
 
 Once you have a copy of the source, you can install it with:
 
