@@ -1,4 +1,9 @@
 services:
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+        - "8025:8025"
+
   postgres:
     image: ${DOCKER_ARCHIVE:-ghcr.io/roman-supernova-pit}/snpit-db-postgres:${DOCKER_VERSION:-test20250819}
     build:
@@ -18,6 +23,28 @@ services:
       timeout: 10s
       retries: 10
 
+  # createdb:
+      
+  webserver:
+    depends_on:
+      # createdb:
+      #   condition: service_completed_successfully
+      mailhog:
+        condition: service_started
+    healthcheck:
+      test: netcat -w 1 localhost 8080 || exit 1
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    image: rknop/roman_snpit_db_test
+    build:
+      context: ../..
+      dockerfile: docker/webserver/Dockerfile
+      target: test
+    ports:
+      - "8080:8080"
+    user: ${USERID:-0}:${GROUPID:-0}
+      
   shell-nocreatedb:
     depends_on:
       postgres:

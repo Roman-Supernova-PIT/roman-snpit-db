@@ -7,7 +7,7 @@ from snpit_utils.logger import SNLogger
 
 # By default, we don't want to drop users or migrations
 tablenames = roman_snpit_db.db.all_table_names.copy()
-# tablenames.remove( "authuser" )
+tablenames.remove( "authuser" )
 tablenames.remove( "_migrations_applied" )
 
 with roman_snpit_db.db.DBCon() as con:

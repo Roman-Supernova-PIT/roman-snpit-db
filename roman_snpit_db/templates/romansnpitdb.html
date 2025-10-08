@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<!-- <link rel="icon" type="image.png" href="static/favicon.png"> -->
+<link rel="stylesheet" href="static/romansnpit.css">
+<script src="static/romansnpit.js" type="module"></script>
+<script src="static/romansnpit_start.js" type="module"></script>
+{% endblock %}
+
+{% block title %}Roman SNPIT Database{% endblock %}
+
+{% block content %}
+  <div name="bodydiv" id="bodydiv" class="bodydiv">
+    <div name="authdiv" id="authdiv" class="authdiv"></div>
+    <div name="pagebody" id="pagebody" class="pagebody"></div>
+  </div>
+{% endblock %}

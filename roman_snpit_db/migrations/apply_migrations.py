@@ -10,7 +10,7 @@ from roman_snpit_db.db import DBCon, get_connect_info
 import psycopg
 
 
-def main():
+def apply_migrations():
     dbhost, dbport, dbname, dbuser, dbpass = get_connect_info()
 
     direc = pathlib.Path( __file__ ).parent
@@ -78,4 +78,4 @@ def main():
 
 # ======================================================================
 if __name__ == "__main__":
-    main()
+    apply_migrations()

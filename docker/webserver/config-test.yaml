@@ -1,0 +1,16 @@
+webserver:
+  flask_secret_key: o6950bi77gvbc2jie49lklotwll69ayv
+  emailfrom: raknop@lbl.gov
+  smtpserver: smtp.lbnl.gov
+  smtpport: 25
+  smtpusessl: False
+  smtpusername: NULL
+  smtppassword: NUULL
+  
+
+db:
+  host: postgres
+  port: 5432
+  name: roman_snpit
+  user: postgres
+  passwd: fragile

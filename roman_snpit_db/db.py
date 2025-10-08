@@ -34,7 +34,7 @@ from snpit_utils.logger import SNLogger
 # tables on the list from being dropped.
 all_table_names = [ 'campari_lightcurve', 'phrosty_lightcurve', 'summed_image', 'summed_image_component',
                     'l2image', 'diaobject_classification', 'diaobject_position', 'diaobject',
-                    'provenance_upstream', 'provenance', '_migrations_applied'
+                    'provenance_upstream', 'provenance', 'passwordlink', 'authuser', '_migrations_applied'
                    ]
 
 # The following two variables are used for debugging, and should be False in production.
@@ -469,13 +469,16 @@ class ColumnMeta:
 #   SQL, and (3) sometimes it's worth re-inventing the wheel so that you get
 #   just a wheel (and also so that you really get a wheel and not massive tank
 #   treads that you are supposed to think act like a wheel)
+#
+# This class shares a lot of DNA with DBBase in FASTDB
+#   ( https://github.com/LSSTDESC/FASTDB )
 
 class DBBase:
     """A base class from which all other table classes derive themselves.
 
     All subclasses must include:
 
-    __tablename__ = "<name of table in databse>"
+    __tablename__ = "<name of table in database>"
     _tablemeta = None
     _pk = <list>
 
@@ -991,3 +994,86 @@ class DBBase:
                 cursor.execute( "DROP TABLE temp_bulk_upsert" )
                 con.commit()
                 return ninserted
+
+
+# ======================================================================
+
+class AuthUser( DBBase ):
+    __tablename__ = "authuser"
+    _tablemeta = None
+    _pk = [ 'id' ]
+
+    def __init__( self, *args, **kwargs ):
+        super().__init__( *args, **kwargs )
+
+
+# ======================================================================
+
+class PasswordLink( DBBase ):
+    __tablename__ = "passwordlink"
+    _tablemeta = None
+    _pk = [ 'id' ]
+
+
+# ======================================================================
+
+class Provenance( DBBase ):
+    __tablename__ = "provenance"
+    _tablemeta = None
+    _pk = [ 'id' ]
+
+
+# ======================================================================
+
+class DiaObject( DBBase ):
+    __tablename__ = "diaobject"
+    _tablemeta = None
+    _pk = [ 'id' ]
+
+
+# ======================================================================
+
+class DiaObjectPosition( DBBase ):
+    __tablename__ = "diaobject_position"
+    _tablemeta = None
+    _pk = [ 'id' ]
+
+
+# ======================================================================
+
+class DiaObjectClassification( DBBase ):
+    __tablename__ = "diaobject_classification"
+    _tablemeta = None
+    _pk = [ 'id' ]
+
+
+# ======================================================================
+
+class L2Image( DBBase ):
+    __tablename__ = "l2image"
+    _tablemeta = None
+    _pk = [ 'id' ]
+
+
+# ======================================================================
+
+class SummedImage( DBBase ):
+    __tablename__ = "summed_image"
+    _tablemeta = None
+    _pk = [ 'id' ]
+
+
+# ======================================================================
+
+class PhrostyLightcurve( DBBase ):
+    __tablename__ = "phrosty_lightcurve"
+    _tablemeta = None
+    _pk = [ 'id' ]
+
+
+# ======================================================================
+
+class CampariLightcurve( DBBase ):
+    __tablename__ = "campari_lightcurve"
+    _tablemeta = None
+    _pk = [ 'id' ]

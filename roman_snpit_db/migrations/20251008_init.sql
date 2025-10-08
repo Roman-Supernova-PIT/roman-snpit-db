@@ -1,10 +1,40 @@
+CREATE TABLE authuser(
+  id UUID NOT NULL DEFAULT gen_random_uuid(),
+  username text NOT NULL,
+  displayname text NOT NULL,
+  email text NOT NULL,
+  pubkey text,
+  privkey jsonb
+);
+COMMENT ON TABLE authuser IS 'Users';
+COMMENT ON COLUMN authuser.pubkey IS 'RSA public key';
+COMMENT ON COLUMN authuser.privkey IS 'RSA private key encrypted with user password';
+ALTER TABLE authuser ADD CONSTRAINT pk_authuser PRIMARY KEY (id);
+CREATE UNIQUE INDEX ix_authuser_username ON authuser USING btree (username);
+CREATE INDEX ix_authuser_email ON authuser USING btree(email);
+
+CREATE TABLE passwordlink(
+  id UUID NOT NULL,
+  userid UUID NOT NULL,
+  expires timestamp with time zone
+);
+ALTER TABLE passwordlink ADD CONSTRAINT pk_passwordlink PRIMARY KEY (id);
+CREATE INDEX ix_passwordlink_userid ON passwordlink USING btree (userid);
+
+
 CREATE TABLE provenance(
     id text PRIMARY KEY,
+    environment int DEFAULT NULL,
+    env_major int DEFAULT NULL,
+    env_minor int DEFAULT NULL,
     process text NOT NULL,
     major int NOT NULL,
     minor int NOT NULL,
     params JSONB );
 COMMENT ON TABLE provenance IS 'Data product provenance';
+COMMENT ON COLUMN provenance.environment IS 'Environment; see snpit_utils.provenance.Provenance.environments';
+COMMENT ON COLUMN provenance.env_major IS 'Semantic major version of environment for this provenance';
+COMMENT ON COLUMN provenance.env_minor IS 'Semantic minor version of environment for this provenance';
 COMMENT ON COLUMN provenance.id IS 'Unique hash of the provenance';
 COMMENT ON COLUMN provenance.process IS 'Name of the process or code associated with this provenace';
 COMMENT ON COLUMN provenance.major IS 'Semantic major version of code for this provenance';
