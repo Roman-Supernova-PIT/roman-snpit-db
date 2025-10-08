@@ -7,7 +7,7 @@ import flask
 import flask.views
 
 from roman_snpit_db.db import DB
-from snpit_util import SNLogger
+from snpit_utils.logger import SNLogger
 
 
 # ======================================================================

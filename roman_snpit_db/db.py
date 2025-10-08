@@ -305,6 +305,8 @@ class DBCon:
         if self.curcursorisdict:
             return self.cursor.fetchall()
         else:
+            if self.cursor.description is None:
+                return None, None
             cols = [ desc[0] for desc in self.cursor.description ]
             rows = self.cursor.fetchall()
             return rows, cols
