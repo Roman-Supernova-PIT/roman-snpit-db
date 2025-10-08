@@ -2,7 +2,7 @@ import datetime
 import uuid
 import pytest
 
-from snpit_utils.db import PasswordLink
+from roman_snpit_db.db import PasswordLink
 
 from basetest import BaseTestDB
 

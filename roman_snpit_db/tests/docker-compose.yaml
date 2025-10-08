@@ -23,12 +23,28 @@ services:
       timeout: 10s
       retries: 10
 
-  # createdb:
+  createdb:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    image: ${DOCKER_ARCHIVE:-ghcr.io/roman-supernova-pit}/snpit-db-webserver-test:${DOCKER_VERSION:-test20250819}
+    build:
+      context: ../..
+      dockerfile: docker/webserver/Dockerfile
+      target: test
+    environment:
+      - SNPIT_CONFIG=/roman-snpit-db/config-test.yaml
+    entrypoint:
+      - python
+      - -c
+      - "import roman_snpit_db.migrations.apply_migrations as a; a.apply_migrations()"
+    user: ${USERID:-0}:${GROUPID:-0}
       
+        
   webserver:
     depends_on:
-      # createdb:
-      #   condition: service_completed_successfully
+      createdb:
+        condition: service_completed_successfully
       mailhog:
         condition: service_started
     healthcheck:
@@ -36,16 +52,19 @@ services:
       interval: 5s
       timeout: 10s
       retries: 5
-    image: rknop/roman_snpit_db_test
+    image: ${DOCKER_ARCHIVE:-ghcr.io/roman-supernova-pit}/snpit-db-webserver-test:${DOCKER_VERSION:-test20250819}
     build:
       context: ../..
       dockerfile: docker/webserver/Dockerfile
       target: test
+    environment:
+      - SNPIT_CONFIG=/roman-snpit-db/config-test.yaml
     ports:
       - "8080:8080"
     user: ${USERID:-0}:${GROUPID:-0}
       
-  shell-nocreatedb:
+
+  shell:
     depends_on:
       postgres:
         condition: service_healthy

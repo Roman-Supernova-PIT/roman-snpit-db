@@ -585,7 +585,7 @@ class DBBase:
         if _noinit:
             return
 
-        self.load_table_meta( dbcon=dbcon )
+        self._load_table_meta( dbcon=dbcon )
         mycols = set( self._tablemeta.keys() )
 
         if ( cols is None ) != ( vals is None ):
@@ -618,7 +618,7 @@ class DBBase:
 
     def _set_self_from_fetch_cols_row( self, cols, fetchrow, noconvert=False, dbcon=None ):
         if self._tablemeta is None:
-            self.load_table_meta( dbcon=dbcon )
+            self._load_table_meta( dbcon=dbcon )
 
         if noconvert:
             for col, val in zip( cols, fetchrow ):
@@ -693,7 +693,7 @@ class DBBase:
     @classmethod
     def _construct_pk_query_where( cls, *args, me=None ):
         if cls._tablemeta is None:
-            cls.load_table_meta()
+            cls._load_table_meta()
 
         if me is not None:
             if len(args) > 0:
@@ -756,7 +756,7 @@ class DBBase:
             raise TypeError( f"Must past a list of lists, each list having {len(cls._pk)} elwements." )
 
         if cls._tablemeta is None:
-            cls.load_table_meta( dbcon )
+            cls._load_table_meta( dbcon )
 
         comma = ""
         mess = ""
@@ -801,7 +801,7 @@ class DBBase:
     @classmethod
     def getbyattrs( cls, dbcon=None, **attrs ):
         if cls._tablemeta is None:
-            cls.load_table_meta( dbcon )
+            cls._load_table_meta( dbcon )
 
         # WORRY : when we edit attrs below, will that also affect anything outside
         #   this function?  E.g. if it's called with a ** itself.

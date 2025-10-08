@@ -3,7 +3,7 @@ import uuid
 
 import psycopg
 
-from db import DB
+from roman_snpit_db.db import DB
 
 
 class BaseTestDB:
@@ -263,7 +263,7 @@ class BaseTestDB:
             objs = self.cls.get_batch( [ self.obj1.pks, self.obj2.pks ] )
             assert len(objs) == 0
 
-            self.cls.load_table_meta()
+            self.cls._load_table_meta()
             jsoncols = [ c for c in self.cls._tablemeta if self.cls._tablemeta[c]['data_type'] == 'jsonb' ]
 
             # First : list of objects

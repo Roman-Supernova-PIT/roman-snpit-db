@@ -1,7 +1,6 @@
-import uuid
 import pytest
 
-from snpit_utils.db import Provenance
+from roman_snpit_db.db import Provenance
 
 from basetest import BaseTestDB
 
@@ -17,12 +16,12 @@ class TestPasswordLink( BaseTestDB ):
                          'env_minor',
                          'process',
                          'major',
-                         'mionor',
+                         'minor',
                          'params' }
         self.safe_to_modify = [ 'environment', 'env_major', 'env_minor','process', 'major', 'minor', 'params' ]
         self.uniques = []
-        self.obj1 = Provenance( id=uuid.uuid4(),
-                                environment='env1',
+        self.obj1 = Provenance( id='blah1',
+                                environment=0,
                                 env_major=1,
                                 env_minor=0,
                                 process='proc1',
@@ -30,8 +29,8 @@ class TestPasswordLink( BaseTestDB ):
                                 minor=1,
                                )
         self.dict1 = { k: getattr( self.obj1, k ) for k in self.columns }
-        self.obj2 = Provenance( id=uuid.uuid4(),
-                                environment='env2',
+        self.obj2 = Provenance( id='blah2',
+                                environment=1,
                                 env_major=2,
                                 env_minor=2,
                                 process='proc2',
@@ -39,8 +38,8 @@ class TestPasswordLink( BaseTestDB ):
                                 minor=3,
                                )
         self.dict2 = { k: getattr( self.obj2, k ) for k in self.columns }
-        self.dict3 = { 'id': uuid.uuid4(),
-                       'environment': 'env3',
+        self.dict3 = { 'id': 'blah3',
+                       'environment': 2,
                        'env_major': 3,
                        'env_minor': 3,
                        'process': 'proc3',

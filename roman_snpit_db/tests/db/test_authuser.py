@@ -1,7 +1,7 @@
 import uuid
 import pytest
 
-from snpit_utils.db import AuthUser
+from roman_snpit_db.db import AuthUser
 
 from basetest import BaseTestDB
 

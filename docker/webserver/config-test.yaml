@@ -1,11 +1,18 @@
+# This is the config file used for the tests.
+# You should not use it for real.  Ideally, you
+# should have a config stored as a secret somewhere
+# which you mount (say to /secrets/conifg.yaml),
+# and then set the env var SNPIT_CONFIG to point
+# to that config.
+
 webserver:
   flask_secret_key: o6950bi77gvbc2jie49lklotwll69ayv
   emailfrom: raknop@lbl.gov
-  smtpserver: smtp.lbnl.gov
+  smtpserver: smtp.lbl.gov
   smtpport: 25
   smtpusessl: False
   smtpusername: NULL
-  smtppassword: NUULL
+  smtppassword: NULL
   
 
 db:

@@ -81,10 +81,10 @@ ENV PYTHONPATH=/roman-snpit-db
 
 RUN mkdir /sessions
 
-COPY docker/webserver/config-test.yaml /roman-snpit-db/
 COPY docker/webserver/key.pem /usr/src/key.pem
 COPY docker/webserver/cert.pem /usr/src/cert.pem
 COPY docker/webserver/config-test.yaml /roman-snpit-db/
+COPY docker/webserver/roman-snpit-server.py /roman-snpit-db/
 
 EXPOSE 8080
 ENTRYPOINT [ "gunicorn", "--certfile", "/usr/src/cert.pem", "--keyfile", "/usr/src/key.pem", \
