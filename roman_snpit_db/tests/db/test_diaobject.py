@@ -1,29 +1,15 @@
 import uuid
 import pytest
 
-from roman_snpit_db.db import DiaObject, DBCon
+from roman_snpit_db.db import DiaObject
 
 from basetest import BaseTestDB
 
 
 class TestDiaObject( BaseTestDB ):
 
-    @pytest.fixture( scope="class" )
-    def stupid_provenances( self ):
-        try:
-            with DBCon() as con:
-                con.execute_nofetch( "INSERT INTO provenance(id,environment,env_major,env_minor,"
-                                     "process,major,minor) VALUES ('blah1',0,0,0,'foo',0,0)" )
-                con.commit()
-                yield True
-        finally:
-            with DBCon() as con:
-                con.execute_nofetch( "DELETE FROM provenance WHERE id='blah1'" )
-                con.commit()
-
-
     @pytest.fixture
-    def basetest_setup( self, stupid_provenances ):
+    def basetest_setup( self, stupid_provenance ):
         self.cls = DiaObject
         self.safe_to_modify = [ 'name', 'collection', 'subset', 'ra', 'dec',
                                 'tdiscovery', 'tmax', 'tstart', 'tend', 'properties' ]
@@ -31,7 +17,7 @@ class TestDiaObject( BaseTestDB ):
         self.columns.update( [ 'id', 'provenance_id' ] )
         self.uniques = []
         self.obj1 = DiaObject( id=uuid.uuid4(),
-                               provenance_id='blah1',
+                               provenance_id=stupid_provenance,
                                name='obj1',
                                collection='coll1',
                                subset='sub1',
@@ -43,7 +29,7 @@ class TestDiaObject( BaseTestDB ):
                                tend=60060. )
         self.dict1 = { k: getattr( self.obj1, k ) for k in self.columns }
         self.obj2 = DiaObject( id=uuid.uuid4(),
-                               provenance_id='blah1',
+                               provenance_id=stupid_provenance,
                                name='obj2',
                                collection='coll2',
                                subset='sub2',
@@ -55,7 +41,7 @@ class TestDiaObject( BaseTestDB ):
                                tend=60061. )
         self.dict2 = { k: getattr( self.obj2, k ) for k in self.columns }
         self.dict3 = { 'id': uuid.uuid4(),
-                       'provenance_id': 'blah1',
+                       'provenance_id': stupid_provenance,
                        'name': 'obj3',
                        'collection': 'coll3',
                        'subset': 'sub3',

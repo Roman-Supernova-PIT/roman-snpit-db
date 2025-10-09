@@ -8,17 +8,17 @@
 webserver:
   flask_secret_key: o6950bi77gvbc2jie49lklotwll69ayv
   sessionstore: /sessions
-  emailfrom: raknop@lbl.gov
-  smtpserver: smtp.lbl.gov
-  smtpport: 25
+  emailfrom: nobody@nowhere.org
+  smtpserver: mailhog
+  smtpport: 1025
   smtpusessl: False
   smtpusername: NULL
   smtppassword: NULL
   
 
 db:
-  host: postgres
-  port: 5432
-  name: roman_snpit
-  user: postgres
-  passwd: fragile
+  postgres_host: postgres
+  postgres_port: 5432
+  postgres_database: roman_snpit
+  postgres_username: postgres
+  postgres_password: fragile

@@ -65,27 +65,63 @@ class MainPage( BaseView ):
 
 # ======================================================================
 
-class GetProvenance( BaseView ):
-    def get_upstreams( self, prov, con ):
-        rows, cols = con.execute( "SELECT p.* FROM provenance p "
-                                  "INNER JOIN provenance_upstream u ON u.upstream_id=p.id "
-                                  "WHERE u.downstream_id=%(id)s",
-                                  { 'id': prov['id'] } )
+class BaseProvenance( BaseView ):
+    def get_upstreams( self, prov, dbcon ):
+        rows, cols = dbcon.execute( "SELECT p.* FROM provenance p "
+                                    "INNER JOIN provenance_upstream u ON u.upstream_id=p.id "
+                                    "WHERE u.downstream_id=%(id)s",
+                                    { 'id': prov['id'] } )
         if ( rows is None ) or ( len(rows) == 0 ):
             prov[ 'upstreams' ] = {}
         else:
             prov[ 'upstreams' ] = [ { cols[i]: row[i] for i in range( len(cols) ) } for row in rows ]
             for prov in prov[ 'upstreams' ]:
-                self.get_upstreams( prov, con )
+                self.get_upstreams( prov, dbcon )
 
 
-    def do_the_things( self, provid ):
-        with db.DBCon() as con:
-            rows, cols = con.execute( "SELECT * FROM provenance WHERE id=%(id)s", { 'id': provid } )
-            if len(rows) == 0:
-                return f"Unknown provenance {provid}", 500
+    def tag_provenance( self, dbcon, tag, process, provid, replace=False ):
+        rows, cols = dbcon.execute( "SELECT * FROM provenance_tag WHERE tag=%(tag)s AND process=%(process)s",
+                                    { 'tag': tag, 'process': process } )
+        if len(rows) > 0:
             if len(rows) > 1:
-                return f"Database corruption!  More than one provenance with id {provid}!", 500
+                raise RuntimeError( f"Database corruption error!  >1 entry with tag {tag} "
+                                    f"and process {process}" )
+            cols = { c: i for i, c in enumerate(cols) }
+            if str(rows[0][cols['provenance_id']]) == str(provid):
+                # Hey, right thing is already tagged!
+                return
+            else:
+                if replace:
+                    dbcon.execute( "DELETE FROM provenance_tag WHERE tag=%(tag)s AND process=%(process)s",
+                                   { 'tag': tag, 'process': process } )
+                else:
+                    raise RuntimeError( f"Error, there already exists a provenance for tag {tag} and "
+                                        f"process {process}" )
+
+        dbcon.execute( "INSERT INTO provenance_tag(tag, process, provenance_id) "
+                       "VALUES (%(tag)s, %(proc)s, %(id)s)",
+                       { 'tag': tag, 'proc': process, 'id': provid } )
+        dbcon.commit()
+
+
+
+# ======================================================================
+
+class GetProvenance( BaseProvenance ):
+    def do_the_things( self, provid, process=None ):
+        with db.DBCon() as con:
+            if process is None:
+                rows, cols = con.execute( "SELECT * FROM provenance WHERE id=%(id)s", { 'id': provid } )
+            else:
+                rows, cols = con.execute( "SELECT p.* FROM provenance p "
+                                          "INNER JOIN provenance_tag t ON p.id=t.provenance_id "
+                                          "WHERE t.process=%(process)s AND t.tag=%(tag)s",
+                                          { 'process': process, 'tag': provid } )
+            if len(rows) == 0:
+                return f"Unknown provenance {provid}{'' if process is None else f' for process {process}'}", 500
+            if len(rows) > 1:
+                return ( f"Database corruption!  More than one provenance {provid}"
+                         f"{'' if process is None else f' for process {process}'}!" ), 500
             prov = { cols[i]: rows[0][i] for i in range( len(cols) ) }
             self.get_upstreams( prov, con )
 
@@ -94,11 +130,12 @@ class GetProvenance( BaseView ):
 
 # ======================================================================
 
-class CreateProvenance( BaseView ):
+class CreateProvenance( BaseProvenance ):
     def do_the_things( self ):
         if not flask.request.is_json:
             return "Expected JSON payoad", 500
         data = flask.request.json
+
         if 'upstreams' in data:
             upstream_ids = [ p['id'] for p in data['upstreams'] ]
             del data['upstreams']
@@ -108,9 +145,31 @@ class CreateProvenance( BaseView ):
         else:
             upstream_ids = []
 
+        tag = None
+        replace_tag = None
+        if 'tag' in data:
+            tag = data['tag']
+            del data['tag']
+        if 'replace_tag' in data:
+            replace_tag = data['replace_tag']
+            del data['replace_tag']
+
+        existok = False
+        if 'exist_ok' in data:
+            existok = data['exist_ok']
+            del data['exist_ok']
+
         prov = db.Provenance( **data )
         with db.DBCon() as dbcon:
-            prov.insert( dbcon=dbcon.con, nocommit=True, refresh=False )
+            rows, _cols = dbcon.execute( "SELECT * FROM provenance WHERE id=%(id)s", { 'id': data['id'] } )
+            if len(rows) == 0:
+                prov.insert( dbcon=dbcon.con, nocommit=True, refresh=False )
+            elif not existok:
+                return f"Error, provenance {data['id']} already exists", 500
+
+            if tag is not None:
+                self.tag_provenance( dbcon, tag, data['process'], data['id'], replace=replace_tag )
+
             for uid in upstream_ids:
                 dbcon.execute( "INSERT INTO provenance_upstream(downstream_id,upstream_id) "
                                "VALUES (%(down)s,%(up)s)",
@@ -120,11 +179,40 @@ class CreateProvenance( BaseView ):
         return { "status": "ok" }
 
 
+# ======================================================================
+
+class TagProvenance( BaseProvenance ):
+    def do_the_things( self, tag, process, provid, replace=0 ):
+        with db.DBCon() as dbcon:
+            self.tag_provenance( dbcon, tag, process, provid, replace )
+        return { "status": "ok" }
+
+
+# ======================================================================
+
+class ProvenancesForTag( BaseProvenance ):
+    def do_the_things( self, tag ):
+        with db.DBCon() as dbcon:
+            rows, cols = dbcon.execute( "SELECT p.* FROM provenance p "
+                                        "INNER JOIN provenance_tag t ON p.id=t.provenance_id "
+                                        "WHERE t.tag=%(tag)s",
+                                        { 'tag': tag } )
+            provs = [ { cols[i]: row[i] for i in range( len(cols) ) } for row in rows ]
+            for prov in provs:
+                self.get_upstreams( prov, dbcon )
+
+        return provs
+
 
 # ======================================================================
 
 urls = {
     "/": MainPage,
+
     "/getprovenance/<provid>": GetProvenance,
-    "/createprovenance": CreateProvenance
+    "/getprovenance/<provid>/<process>": GetProvenance,   # provid is really a tag
+    "/createprovenance": CreateProvenance,
+    "/tagprovenance/<tag>/<process>/<provid>": TagProvenance,
+    "/tagprovenance/<tag>/<process>/<provid>/<int:replace>": TagProvenance,
+    "/provenancesfortag/<tag>": ProvenancesForTag
 }

@@ -1,8 +1,8 @@
 db:
-  host: postgres
-  port: 5432
-  name: roman_snpit
-  user: postgres
-  passwd: null
-  passwd_file: /secrets/pgpasswd
+  postgres_host: postgres
+  postgres_port: 5432
+  postgres_database: roman_snpit
+  postgres_username: postgres
+  postgres_password: null
+  postgres_password_file: /secrets/pgpasswd
   

@@ -33,7 +33,7 @@ services:
       dockerfile: docker/webserver/Dockerfile
       target: test
     environment:
-      - SNPIT_CONFIG=/roman-snpit-db/config-test.yaml
+      - SNPIT_CONFIG=/roman-snpit-db/roman_snpit_db/tests/test_config.yaml
     entrypoint:
       - python
       - -c

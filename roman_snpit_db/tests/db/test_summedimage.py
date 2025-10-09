@@ -1,29 +1,15 @@
 import uuid
 import pytest
 
-from roman_snpit_db.db import SummedImage, DBCon
+from roman_snpit_db.db import SummedImage
 
 from basetest import BaseTestDB
 
 
 class TestSummedImage( BaseTestDB ):
 
-    @pytest.fixture( scope="class" )
-    def stupid_provenances( self ):
-        try:
-            with DBCon() as con:
-                con.execute_nofetch( "INSERT INTO provenance(id,environment,env_major,env_minor,"
-                                     "process,major,minor) VALUES ('blah1',0,0,0,'foo',0,0)" )
-                con.commit()
-                yield True
-        finally:
-            with DBCon() as con:
-                con.execute_nofetch( "DELETE FROM provenance WHERE id='blah1'" )
-                con.commit()
-
-
     @pytest.fixture
-    def basetest_setup( self, stupid_provenances ):
+    def basetest_setup( self, stupid_provenance ):
         self.cls = SummedImage
         self.safe_to_modify = [ 'collection', 'subset', 'filter',
                                 'ra', 'dec', 'ra_corner_00', 'ra_corner_01', 'ra_corner_10', 'ra_corner_11',
@@ -34,7 +20,7 @@ class TestSummedImage( BaseTestDB ):
         self.columns.update( [ 'id', 'provenance_id' ] )
         self.uniques = []
         self.obj1 = SummedImage( id=uuid.uuid4(),
-                                 provenance_id='blah1',
+                                 provenance_id=stupid_provenance,
                                  collection='coll1',
                                  subset='sub1',
                                  filter='a',
@@ -56,7 +42,7 @@ class TestSummedImage( BaseTestDB ):
                                  mjd_end=60010. )
         self.dict1 = { k: getattr( self.obj1, k ) for k in self.columns }
         self.obj2 = SummedImage( id=uuid.uuid4(),
-                                 provenance_id='blah1',
+                                 provenance_id=stupid_provenance,
                                  collection='coll2',
                                  subset='sub2',
                                  filter='b',
@@ -78,7 +64,7 @@ class TestSummedImage( BaseTestDB ):
                                  mjd_end=60011. )
         self.dict2 = { k: getattr( self.obj2, k ) for k in self.columns }
         self.dict3 = { 'id': uuid.uuid4(),
-                       'provenance_id': 'blah1',
+                       'provenance_id': stupid_provenance,
                        'collection': 'coll3',
                        'subset': 'sub3',
                        'filter': 'c',

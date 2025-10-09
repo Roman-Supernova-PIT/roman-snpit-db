@@ -47,13 +47,13 @@ _alwaysexplain = False
 
 def get_connect_info():
     cfg = Config.get()
-    dbhost = cfg.value( 'db.host' )
-    dbport = cfg.value( 'db.port' )
-    dbname = cfg.value( 'db.name' )
-    dbuser = cfg.value( 'db.user' )
-    dbpasswd = cfg.value( 'db.passwd' )
+    dbhost = cfg.value( 'db.postgres_host' )
+    dbport = cfg.value( 'db.postgres_port' )
+    dbname = cfg.value( 'db.postgres_database' )
+    dbuser = cfg.value( 'db.postgres_username' )
+    dbpasswd = cfg.value( 'db.postgres_password' )
     if dbpasswd is None:
-        with open( cfg.value( 'db.passwd_file' ) ) as ifp:
+        with open( cfg.value( 'db.postgres_password_file' ) ) as ifp:
             dbpasswd = ifp.readline().strip()
 
     return dbhost, dbport, dbname, dbuser, dbpasswd

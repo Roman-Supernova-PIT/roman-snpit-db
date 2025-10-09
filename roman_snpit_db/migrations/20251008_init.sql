@@ -23,7 +23,7 @@ CREATE INDEX ix_passwordlink_userid ON passwordlink USING btree (userid);
 
 
 CREATE TABLE provenance(
-    id text PRIMARY KEY,
+    id UUID PRIMARY KEY,
     environment int DEFAULT NULL,
     env_major int DEFAULT NULL,
     env_minor int DEFAULT NULL,
@@ -42,8 +42,8 @@ COMMENT ON COLUMN provenance.minor IS 'Semantic minor version of code for this p
 COMMENT ON COLUMN provenance.params IS 'Parameters that define the process behavior for this provenance';
 
 CREATE TABLE provenance_upstream(
-    downstream_id text NOT NULL,
-    upstream_id text NOT NULL,
+    downstream_id UUID NOT NULL,
+    upstream_id UUID NOT NULL,
 
     PRIMARY KEY (downstream_id,upstream_id)
 );
@@ -56,9 +56,27 @@ ALTER TABLE provenance_upstream ADD CONSTRAINT fk_prov_upstr_up
   FOREIGN KEY(upstream_id) REFERENCES provenance(id) ON DELETE RESTRICT;
 
 
+-- OK, ok, we're violating database normalization
+--   here by having process, which is also in
+--   the linked provenance_id.  It's here so
+--   we can have a database-ensured unique
+--   (tag, process).
+CREATE TABLE provenance_tag(
+    tag TEXT NOT NULL,
+    process TEXT NOT NULL,
+    provenance_id UUID NOT NULL
+);
+ALTER TABLE provenance_tag ADD PRIMARY KEY (tag, process);
+ALTER TABLE provenance_tag ADD CONSTRAINT fk_provenance_tag_prov
+  FOREIGN KEY(provenance_id) REFERENCES provenance(id) ON DELETE RESTRICT;
+COMMENT ON TABLE provenance_tag IS 'Human readable tags for collections of provenances';
+COMMENT ON COLUMN provenance_tag.tag IS 'Human-readable tag';
+COMMENT ON COLUMN provenance_tag.process IS 'process of the provenance; must match corresponding provenance process';
+COMMENT ON COLUMN provenance_tag.provenance_id IS 'id of the provenance';
+
 CREATE TABLE diaobject(
     id UUID PRIMARY KEY,
-    provenance_id text NOT NULL,
+    provenance_id UUID NOT NULL,
     name text,
     collection text NOT NULL,
     subset text,
@@ -91,7 +109,7 @@ COMMENT ON COLUMN diaobject.properties IS 'Collection-specific additional proper
 CREATE TABLE diaobject_position(
     id UUID PRIMARY KEY,
     diaobject_id UUID NOT NULL,
-    provenance_id TEXT NOT NULL,
+    provenance_id UUID NOT NULL,
     ra double precision,
     ra_err double precision,
     dec double precision,
@@ -117,7 +135,7 @@ COMMENT ON COLUMN diaobject_position.calculated_at IS 'Time when this position w
 CREATE TABLE diaobject_classification(
   id UUID PRIMARY KEY,
   diaobject_id UUID NOT NULL,
-  provenance_id TEXT NOT NULL,
+  provenance_id UUID NOT NULL,
   class_id int,
   probability real
 );
@@ -134,7 +152,7 @@ COMMENT ON TABLE diaobject_classification IS 'diaobject classification types and
 
 CREATE TABLE l2image(
     id UUID PRIMARY KEY,
-    provenance_id text NOT NULL,
+    provenance_id UUID NOT NULL,
     collection text NOT NULL,
     subset text,
     pointing int,
@@ -194,7 +212,7 @@ COMMENT ON COLUMN l2image.dec_corner_11 IS 'Dec of pixel (width-1,height-1)';
 
 CREATE TABLE summed_image(
     id UUID PRIMARY KEY,
-    provenance_id text NOT NULL,
+    provenance_id UUID NOT NULL,
     collection text NOT NULL,
     subset text NOT NULL,
     filter text NOT NULL,
@@ -253,7 +271,7 @@ COMMENT ON TABLE summed_image_component IS 'summed_image linkage table';
 
 CREATE TABLE phrosty_lightcurve(
     id UUID PRIMARY KEY,
-    provenance_id text NOT NULL,
+    provenance_id UUID NOT NULL,
     collection text NOT NULL,
     subset text,
     diaobject_id UUID NOT NULL,
@@ -275,7 +293,7 @@ COMMENT ON TABLE phrosty_lightcurve IS 'Lightcurves produced by phrosty';
 
 CREATE TABLE campari_lightcurve(
     id UUID PRIMARY KEY,
-    provenance_id text NOT NULL,
+    provenance_id UUID NOT NULL,
     collection text NOT NULL,
     subset text,
     diaobject_id UUID NOT NULL,

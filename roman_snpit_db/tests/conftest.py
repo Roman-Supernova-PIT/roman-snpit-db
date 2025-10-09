@@ -1,10 +1,11 @@
 # this is a module level file
 import pytest # noqa: F401
+import uuid
 
 import tox # noqa: F401
 from tox.pytest import init_fixture # noqa: F401
 
-from roman_snpit_db.db import AuthUser
+from roman_snpit_db.db import DBCon, AuthUser
 from rkwebutil.rkauth_client import rkAuthClient
 
 
@@ -50,3 +51,36 @@ def dbclient( dbuser ):
 
     res = client.send( '/auth/logout' )
     assert res['status'] == 'Logged out'
+
+
+@pytest.fixture( scope="module" )
+def stupid_provenance():
+    try:
+        with DBCon() as con:
+            provid = uuid.uuid4()
+            con.execute_nofetch( "INSERT INTO provenance(id,environment,env_major,env_minor,"
+                                 "process,major,minor) VALUES (%(provid)s,0,0,0,'foo',0,0)",
+                                 { 'provid': provid } )
+            con.commit()
+            yield provid
+    finally:
+        with DBCon() as con:
+            con.execute_nofetch( "DELETE FROM provenance WHERE id=%(id)s", { 'id': provid } )
+            con.commit()
+
+
+
+@pytest.fixture( scope="module" )
+def stupid_object( stupid_provenance ):
+    try:
+        objid = uuid.uuid4()
+        with DBCon() as con:
+            con.execute_nofetch( "INSERT INTO diaobject(id,provenance_id,name,collection) "
+                                 "VALUES(%(id)s,%(provid)s,'foo','bar')",
+                                 { 'id': objid, 'provid': stupid_provenance } )
+            con.commit()
+        yield objid
+    finally:
+        with DBCon() as con:
+            con.execute_nofetch( "DELETE FROM diaobject WHERE id=%(id)s", { 'id': objid } )
+            con.commit()
