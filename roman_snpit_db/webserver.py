@@ -65,6 +65,18 @@ class MainPage( BaseView ):
 
 # ======================================================================
 
+class TestEndpoint( BaseView ):
+    # This one is used in one of the snpit_utils tests
+
+    def dispatch_request( self, param=None ):
+        resp = { 'param': param }
+        if flask.request.is_json:
+            resp['json'] = flask.request.json
+        return resp
+
+
+# ======================================================================
+
 class BaseProvenance( BaseView ):
     def get_upstreams( self, prov, dbcon ):
         rows, cols = dbcon.execute( "SELECT p.* FROM provenance p "
@@ -210,6 +222,7 @@ class ProvenancesForTag( BaseProvenance ):
 
 urls = {
     "/": MainPage,
+    "/test/<param>": TestEndpoint,
 
     "/getprovenance/<provid>": GetProvenance,
     "/getprovenance/<provid>/<process>": GetProvenance,   # provid is really a tag

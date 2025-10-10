@@ -53,6 +53,17 @@ RUN source /venv/bin/activate && \
        pytest-timestamper==0.0.10 \
        remote-pdb==2.1.0
 
+# **************************************
+# TODO remove these next lines
+WORKDIR /usr/src
+RUN echo "Hello, world!"
+RUN git clone https://github.com/Roman-Supernova-PIT/snpit_utils.git && \
+    cd snpit_utils && \
+    git checkout u/rknop/db && \
+    source /venv/bin/activate && \
+    pip install .
+# **************************************
+
 RUN mkdir -p /usr/src/roman_snpit_db_install
 WORKDIR /usr/src/roman_snpit_db_install
 COPY . /usr/src/roman_snpit_db_install

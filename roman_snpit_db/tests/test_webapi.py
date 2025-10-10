@@ -53,9 +53,8 @@ def test_create_get_provenance( dbclient ):
         assert set( r['id'] for r in res ) == { str(downstream.id) }
 
         # Can't tag a provenance where the process is already tagged as such
-        with pytest.raises( RuntimeError, match=( '^Got response 500: Error, there already exists a provenance '
-                                                  'for tag kaglorky and process proc3' ) ):
-            res = dbclient.send( f"tagprovenance/kaglorky/proc3/{wayupstream.id}")
+        with pytest.raises( RuntimeError, match=( '^Failed to connect.*already exists a provenance' ), ):
+            res = dbclient.send( f"tagprovenance/kaglorky/proc3/{wayupstream.id}", retries=1 )
 
         # But can replace it if we tell it to
         res = dbclient.send( f"tagprovenance/kaglorky/proc3/{wayupstream.id}/1")

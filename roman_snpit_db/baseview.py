@@ -1,7 +1,5 @@
-import uuid
 from types import SimpleNamespace
-import json
-import numbers
+import simplejson
 
 import flask
 import flask.views
@@ -73,7 +71,8 @@ class BaseView( flask.views.View ):
             #   writes out NaN which is not standard JSON and which
             #   the javascript JSON parser chokes on.  Sigh.
             if isinstance( retval, dict ) or isinstance( retval, list ):
-                return ( json.dumps( retval, ignore_nan=True, cls=SNPITJsonEncoder ),
+                SNLogger.warning( f"Dumping to json: {retval}" )
+                return ( simplejson.dumps( retval, ignore_nan=True, cls=SNPITJsonEncoder ),
                          200, { 'Content-Type': 'application/json' } )
             elif isinstance( retval, str ):
                 return retval, 200, { 'Content-Type': 'text/plain; charset=utf-8' }
