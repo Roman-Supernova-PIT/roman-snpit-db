@@ -1,6 +1,6 @@
 import uuid
 from types import SimpleNamespace
-import simplejson
+import json
 import numbers
 
 import flask
@@ -8,24 +8,7 @@ import flask.views
 
 from roman_snpit_db.db import DB
 from snpit_utils.logger import SNLogger
-
-
-# ======================================================================
-# Encoder for simplejson
-#
-# Handels UUID (which is why it was named this, as it originally only did this),
-#   floats, and integers, converting numpy types to regular floats and ints
-
-class UUIDJSONEncoder( simplejson.JSONEncoder ):
-    def default( self, obj ):
-        if isinstance( obj, uuid.UUID ):
-            return str(obj)
-        elif isinstance( obj, numbers.Integral ):
-            return int(obj)
-        elif isinstance( obj, numbers.Real ):
-            return float(obj)
-        else:
-            return super().default( obj )
+from snpit_utils.utils import SNPITJsonEncoder
 
 
 # ======================================================================
@@ -90,7 +73,7 @@ class BaseView( flask.views.View ):
             #   writes out NaN which is not standard JSON and which
             #   the javascript JSON parser chokes on.  Sigh.
             if isinstance( retval, dict ) or isinstance( retval, list ):
-                return ( simplejson.dumps( retval, ignore_nan=True, cls=UUIDJSONEncoder ),
+                return ( json.dumps( retval, ignore_nan=True, cls=SNPITJsonEncoder ),
                          200, { 'Content-Type': 'application/json' } )
             elif isinstance( retval, str ):
                 return retval, 200, { 'Content-Type': 'text/plain; charset=utf-8' }
