@@ -72,11 +72,13 @@ class BaseProvenance( BaseView ):
                                     "WHERE u.downstream_id=%(id)s",
                                     { 'id': prov['id'] } )
         if ( rows is None ) or ( len(rows) == 0 ):
-            prov[ 'upstreams' ] = {}
+            prov[ 'upstreams' ] = []
         else:
             prov[ 'upstreams' ] = [ { cols[i]: row[i] for i in range( len(cols) ) } for row in rows ]
             for prov in prov[ 'upstreams' ]:
                 self.get_upstreams( prov, dbcon )
+            # Sort prov['upstreams'] by id, because that's the standard we use to make it reproducible
+            prov[ 'upstreams' ].sort( key=lambda x: x['id'] )
 
 
     def tag_provenance( self, dbcon, tag, process, provid, replace=False ):
