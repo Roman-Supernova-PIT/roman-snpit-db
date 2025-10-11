@@ -74,12 +74,13 @@ COMMENT ON COLUMN provenance_tag.tag IS 'Human-readable tag';
 COMMENT ON COLUMN provenance_tag.process IS 'process of the provenance; must match corresponding provenance process';
 COMMENT ON COLUMN provenance_tag.provenance_id IS 'id of the provenance';
 
+-- TODO: concept of no-provenance root_diaobject to join together objects of different provenances
+
 CREATE TABLE diaobject(
     id UUID PRIMARY KEY,
     provenance_id UUID NOT NULL,
     name text,
-    collection text NOT NULL,
-    subset text,
+    iauname text,
     ra double precision,
     dec double precision,
     tdiscovery double precision,
@@ -90,13 +91,13 @@ CREATE TABLE diaobject(
 );
 CREATE INDEX ix_diaobject_q3c ON diaobject (q3c_ang2ipix(ra,dec));
 CREATE INDEX ix_diaobject_name ON diaobject(name);
-CREATE INDEX ix_diaobject_collection ON diaobject(collection);
+CREATE INDEX ix_diaobject_iauname ON diaobject(iauname);
 ALTER TABLE diaobject ADD CONSTRAINT fk_diaobject_prov
   FOREIGN KEY(provenance_id) REFERENCES provenance(id) ON DELETE RESTRICT;
 CREATE INDEX ix_diaobject_provenance_id ON diaobject(provenance_id);
 COMMENT ON TABLE diaobject IS 'Known transients or simulated transients';
-COMMENT ON COLUMN diaobject.name IS 'Name or id of the transient within its collection';
-COMMENT ON COLUMN diaobject.collection IS 'Collection of transients this is part of';
+COMMENT ON COLUMN diaobject.name IS 'Name or id of the transient within its provenance.';
+COMMENT ON COLUMN diaobject.iauname IS 'IAU/TNS name of the transient.';
 COMMENT ON COLUMN diaobject.ra IS 'Approx (±1"ish) RA of object; ICRS decimal degrees';
 COMMENT ON COLUMN diaobject.dec IS 'Approx (±1"ish) Dec of object; ICRS decimal degrees';
 COMMENT ON COLUMN diaobject.tdiscovery IS 'MJD of image where the transient was discovered';
@@ -132,29 +133,9 @@ COMMENT ON COLUMN diaobject_position.ra_dec_covar IS 'Covariance between RA and 
 COMMENT ON COLUMN diaobject_position.calculated_at IS 'Time when this position was calculculated';
 
 
-CREATE TABLE diaobject_classification(
-  id UUID PRIMARY KEY,
-  diaobject_id UUID NOT NULL,
-  provenance_id UUID NOT NULL,
-  class_id int,
-  probability real
-);
-CREATE UNIQUE INDEX ix_objclass_spec ON diaobject_classification(diaobject_id,provenance_id,class_id);
-CREATE INDEX ix_objclass_classid ON diaobject_classification(class_id);
-ALTER TABLE diaobject_classification ADD CONSTRAINT fk_objclass_diaobject
-  FOREIGN KEY(diaobject_id) REFERENCES diaobject(id) ON DELETE CASCADE;
-CREATE INDEX ix_objclass_diaobject ON diaobject_classification(diaobject_id);
-ALTER TABLE diaobject_classification ADD CONSTRAINT fk_objclass_provenance
-  FOREIGN KEY(provenance_id) REFERENCES provenance(id) ON DELETE CASCADE;
-CREATE INDEX ix_objclass_provenance ON diaobject_classification(provenance_id);
-COMMENT ON TABLE diaobject_classification IS 'diaobject classification types and probabilities';
-
-
 CREATE TABLE l2image(
     id UUID PRIMARY KEY,
     provenance_id UUID NOT NULL,
-    collection text NOT NULL,
-    subset text,
     pointing int,
     sca int,
     filter text NOT NULL,
@@ -177,11 +158,10 @@ CREATE TABLE l2image(
     exptime real NOT NULL,
     properties JSONB
 );
-CREATE INDEX ix_l2image_collection ON l2image(collection);
 CREATE INDEX ix_l2image_pointing ON l2image(pointing);
 CREATE INDEX ix_l2image_sca ON l2image(sca);
 CREATE INDEX ix_l2image_filter ON l2image(filter);
-CREATE UNIQUE INDEX ix_l2image_spec ON l2image(provenance_id,collection,pointing,sca,filter);
+CREATE UNIQUE INDEX ix_l2image_spec ON l2image(provenance_id,pointing,sca,filter);
 CREATE INDEX ix_l2image_q3c ON l2image (q3c_ang2ipix(ra,dec));
 CREATE INDEX ix_l2image_ra00 ON l2image (ra_corner_00);
 CREATE INDEX ix_l2image_ra01 ON l2image (ra_corner_01);
@@ -197,7 +177,6 @@ ALTER TABLE l2image ADD CONSTRAINT fk_l2image_prov
   FOREIGN KEY(provenance_id) REFERENCES provenance(id) ON DELETE RESTRICT;
 CREATE INDEX ix_l2image_provenance_id ON l2image(provenance_id);
 COMMENT ON TABLE l2image IS 'L2 image';
-COMMENT ON COLUMN l2image.collection IS 'Collection this image is part of';
 COMMENT ON COLUMN l2image.pointing IS 'Pointing of the exposure this image is from';
 COMMENT ON COLUMN l2image.sca IS 'SCA of this image';
 COMMENT ON COLUMN l2image.ra_corner_00 IS 'RA of pixel (0,0)';
@@ -213,8 +192,6 @@ COMMENT ON COLUMN l2image.dec_corner_11 IS 'Dec of pixel (width-1,height-1)';
 CREATE TABLE summed_image(
     id UUID PRIMARY KEY,
     provenance_id UUID NOT NULL,
-    collection text NOT NULL,
-    subset text NOT NULL,
     filter text NOT NULL,
     ra double precision NOT NULL,
     dec double precision NOT NULL,
@@ -235,7 +212,6 @@ CREATE TABLE summed_image(
     mjd_end double precision NOT NULL,
     properties JSONB
 );
-CREATE INDEX ix_sumim_collection ON summed_image(collection);
 CREATE INDEX ix_sumim_filter ON summed_image(filter);
 CREATE INDEX ix_sumim_q3c ON summed_image(q3c_ang2ipix(ra,dec));
 CREATE INDEX ix_sumim_ra00 ON summed_image(ra_corner_00);
@@ -269,45 +245,43 @@ CREATE INDEX ix_sumpcom_compim ON summed_image_component(l2image_id);
 COMMENT ON TABLE summed_image_component IS 'summed_image linkage table';
 
 
-CREATE TABLE phrosty_lightcurve(
+CREATE TABLE lightcurve(
     id UUID PRIMARY KEY,
     provenance_id UUID NOT NULL,
-    collection text NOT NULL,
-    subset text,
     diaobject_id UUID NOT NULL,
     filter text NOT NULL,
-    filepath text NOT NULL
+    filepath text NOT NULL,
+    created_at timestamp with time zone default NOW()
+
 );
-CREATE INDEX phrosty_collection ON phrosty_lightcurve(collection);
-CREATE INDEX phrosty_filter ON phrosty_lightcurve(filter);
-CREATE INDEX phrosty_filepath ON phrosty_lightcurve(filepath);
-CREATE UNIQUE INDEX phrosty_spec ON phrosty_lightcurve(provenance_id,diaobject_id,collection,subset);
-ALTER TABLE phrosty_lightcurve ADD CONSTRAINT fk_phrosty_prov
+CREATE INDEX ix_lightcurve_filter ON lightcurve(filter);
+CREATE INDEX ix_lightcurve_filepath ON lightcurve(filepath);
+CREATE INDEX ix_lightcurve_provenance ON lightcurve(provenance_id);
+CREATE INDEX ix_lightcurve_diaobject ON lightcurve(diaobject_id);
+CREATE UNIQUE INDEX ix_lightcurve_spec ON lightcurve(provenance_id,diaobject_id,filter);
+ALTER TABLE lightcurve ADD CONSTRAINT fk_lightcurve_prov
   FOREIGN KEY(provenance_id) REFERENCES provenance(id) ON DELETE RESTRICT;
-CREATE INDEX ix_phrosty_prov ON phrosty_lightcurve(provenance_id);
-ALTER TABLE phrosty_lightcurve ADD CONSTRAINT fk_phrosty_diaobject
+ALTER TABLE lightcurve ADD CONSTRAINT fk_lightcurve_diaobject
   FOREIGN KEY(diaobject_id) REFERENCES diaobject(id) ON DELETE RESTRICT;
-CREATE INDEX ix_phrosty_diaobject ON phrosty_lightcurve(diaobject_id);
-COMMENT ON TABLE phrosty_lightcurve IS 'Lightcurves produced by phrosty';
+COMMENT ON TABLE lightcurve IS 'Transient object light curves; (provenance_id,diaobject_id,filter) is unique';
 
 
-CREATE TABLE campari_lightcurve(
-    id UUID PRIMARY KEY,
-    provenance_id UUID NOT NULL,
-    collection text NOT NULL,
-    subset text,
-    diaobject_id UUID NOT NULL,
-    filter text NOT NULL,
-    filepath text NOT NULL
-);
-CREATE INDEX campari_collection ON campari_lightcurve(collection);
-CREATE INDEX campari_filter ON campari_lightcurve(filter);
-CREATE INDEX campari_filepath ON campari_lightcurve(filepath);
-CREATE UNIQUE INDEX campari_spec ON campari_lightcurve(provenance_id,diaobject_id,collection,subset);
-ALTER TABLE campari_lightcurve ADD CONSTRAINT fk_campari_prov
-  FOREIGN KEY(provenance_id) REFERENCES provenance(id) ON DELETE RESTRICT;
-CREATE INDEX ix_campari_prov ON campari_lightcurve(provenance_id);
-ALTER TABLE campari_lightcurve ADD CONSTRAINT fk_campari_diaobject
-  FOREIGN KEY(diaobject_id) REFERENCES diaobject(id) ON DELETE RESTRICT;
-CREATE INDEX ix_campari_diaobject ON campari_lightcurve(diaobject_id);
-COMMENT ON TABLE campari_lightcurve IS 'Lightcurves produced by campari';
+-- Find out what the characterization team wants to do before doing this.
+-- We might want to story an array of class_id and probability in one row, for instance.
+--
+-- CREATE TABLE diaobject_classification(
+--   id UUID PRIMARY KEY,
+--   diaobject_id UUID NOT NULL,
+--   provenance_id UUID NOT NULL,
+--   class_id int,
+--   probability real
+-- );
+-- CREATE UNIQUE INDEX ix_objclass_spec ON diaobject_classification(diaobject_id,provenance_id,class_id);
+-- CREATE INDEX ix_objclass_classid ON diaobject_classification(class_id);
+-- ALTER TABLE diaobject_classification ADD CONSTRAINT fk_objclass_diaobject
+--   FOREIGN KEY(diaobject_id) REFERENCES diaobject(id) ON DELETE CASCADE;
+-- CREATE INDEX ix_objclass_diaobject ON diaobject_classification(diaobject_id);
+-- ALTER TABLE diaobject_classification ADD CONSTRAINT fk_objclass_provenance
+--   FOREIGN KEY(provenance_id) REFERENCES provenance(id) ON DELETE CASCADE;
+-- CREATE INDEX ix_objclass_provenance ON diaobject_classification(provenance_id);
+-- COMMENT ON TABLE diaobject_classification IS 'diaobject classification types and probabilities';

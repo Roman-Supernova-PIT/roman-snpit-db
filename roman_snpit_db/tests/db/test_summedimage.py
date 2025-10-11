@@ -11,8 +11,8 @@ class TestSummedImage( BaseTestDB ):
     @pytest.fixture
     def basetest_setup( self, stupid_provenance ):
         self.cls = SummedImage
-        self.safe_to_modify = [ 'collection', 'subset', 'filter',
-                                'ra', 'dec', 'ra_corner_00', 'ra_corner_01', 'ra_corner_10', 'ra_corner_11',
+        self.safe_to_modify = [ 'filter', 'ra', 'dec',
+                                'ra_corner_00', 'ra_corner_01', 'ra_corner_10', 'ra_corner_11',
                                 'dec_corner_00', 'dec_corner_01', 'dec_corner_10', 'dec_corner_11',
                                 'filepath', 'extension', 'width', 'height', 'format', 'mjd_start',
                                 'mjd_end', 'properties' ]
@@ -21,8 +21,6 @@ class TestSummedImage( BaseTestDB ):
         self.uniques = []
         self.obj1 = SummedImage( id=uuid.uuid4(),
                                  provenance_id=stupid_provenance,
-                                 collection='coll1',
-                                 subset='sub1',
                                  filter='a',
                                  ra=1.,
                                  dec=1.,
@@ -43,8 +41,6 @@ class TestSummedImage( BaseTestDB ):
         self.dict1 = { k: getattr( self.obj1, k ) for k in self.columns }
         self.obj2 = SummedImage( id=uuid.uuid4(),
                                  provenance_id=stupid_provenance,
-                                 collection='coll2',
-                                 subset='sub2',
                                  filter='b',
                                  ra=2.,
                                  dec=2.,
@@ -65,8 +61,6 @@ class TestSummedImage( BaseTestDB ):
         self.dict2 = { k: getattr( self.obj2, k ) for k in self.columns }
         self.dict3 = { 'id': uuid.uuid4(),
                        'provenance_id': stupid_provenance,
-                       'collection': 'coll3',
-                       'subset': 'sub3',
                        'filter': 'c',
                        'ra': 3.,
                        'dec': 3.,

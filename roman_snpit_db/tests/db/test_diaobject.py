@@ -11,7 +11,7 @@ class TestDiaObject( BaseTestDB ):
     @pytest.fixture
     def basetest_setup( self, stupid_provenance ):
         self.cls = DiaObject
-        self.safe_to_modify = [ 'name', 'collection', 'subset', 'ra', 'dec',
+        self.safe_to_modify = [ 'name', 'iauname', 'ra', 'dec',
                                 'tdiscovery', 'tmax', 'tstart', 'tend', 'properties' ]
         self.columns = set( self.safe_to_modify )
         self.columns.update( [ 'id', 'provenance_id' ] )
@@ -19,8 +19,6 @@ class TestDiaObject( BaseTestDB ):
         self.obj1 = DiaObject( id=uuid.uuid4(),
                                provenance_id=stupid_provenance,
                                name='obj1',
-                               collection='coll1',
-                               subset='sub1',
                                ra=128.,
                                dec=42.,
                                tdiscovery=60015.,
@@ -31,8 +29,6 @@ class TestDiaObject( BaseTestDB ):
         self.obj2 = DiaObject( id=uuid.uuid4(),
                                provenance_id=stupid_provenance,
                                name='obj2',
-                               collection='coll2',
-                               subset='sub2',
                                ra=64.,
                                dec=-13.,
                                tdiscovery=60016.,
@@ -43,8 +39,6 @@ class TestDiaObject( BaseTestDB ):
         self.dict3 = { 'id': uuid.uuid4(),
                        'provenance_id': stupid_provenance,
                        'name': 'obj3',
-                       'collection': 'coll3',
-                       'subset': 'sub3',
                        'ra': 23.,
                        'dec': -42.,
                        'tdiscovery': 60017.,

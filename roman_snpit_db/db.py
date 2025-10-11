@@ -1043,14 +1043,6 @@ class DiaObjectPosition( DBBase ):
 
 # ======================================================================
 
-class DiaObjectClassification( DBBase ):
-    __tablename__ = "diaobject_classification"
-    _tablemeta = None
-    _pk = [ 'id' ]
-
-
-# ======================================================================
-
 class L2Image( DBBase ):
     __tablename__ = "l2image"
     _tablemeta = None
@@ -1067,15 +1059,15 @@ class SummedImage( DBBase ):
 
 # ======================================================================
 
-class PhrostyLightcurve( DBBase ):
-    __tablename__ = "phrosty_lightcurve"
+class Lightcurve( DBBase ):
+    __tablename__ = "lightcurve"
     _tablemeta = None
     _pk = [ 'id' ]
 
 
 # ======================================================================
 
-class CampariLightcurve( DBBase ):
-    __tablename__ = "campari_lightcurve"
-    _tablemeta = None
-    _pk = [ 'id' ]
+# class DiaObjectClassification( DBBase ):
+#     __tablename__ = "diaobject_classification"
+#     _tablemeta = None
+#     _pk = [ 'id' ]

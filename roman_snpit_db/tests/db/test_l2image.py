@@ -11,8 +11,8 @@ class TestL2Image( BaseTestDB ):
     @pytest.fixture
     def basetest_setup( self, stupid_provenance ):
         self.cls = L2Image
-        self.safe_to_modify = [ 'collection', 'subset', 'pointing', 'sca', 'filter',
-                                'ra', 'dec', 'ra_corner_00', 'ra_corner_01', 'ra_corner_10', 'ra_corner_11',
+        self.safe_to_modify = [ 'pointing', 'sca', 'filter', 'ra', 'dec',
+                                'ra_corner_00', 'ra_corner_01', 'ra_corner_10', 'ra_corner_11',
                                 'dec_corner_00', 'dec_corner_01', 'dec_corner_10', 'dec_corner_11',
                                 'filepath', 'extension', 'width', 'height', 'format', 'mjd_start',
                                 'exptime', 'properties' ]
@@ -21,8 +21,6 @@ class TestL2Image( BaseTestDB ):
         self.uniques = []
         self.obj1 = L2Image( id=uuid.uuid4(),
                              provenance_id=stupid_provenance,
-                             collection='coll1',
-                             subset='sub1',
                              pointing=1,
                              sca=1,
                              filter='a',
@@ -45,8 +43,6 @@ class TestL2Image( BaseTestDB ):
         self.dict1 = { k: getattr( self.obj1, k ) for k in self.columns }
         self.obj2 = L2Image( id=uuid.uuid4(),
                              provenance_id=stupid_provenance,
-                             collection='coll2',
-                             subset='sub2',
                              pointing=2,
                              sca=2,
                              filter='b',
@@ -69,8 +65,6 @@ class TestL2Image( BaseTestDB ):
         self.dict2 = { k: getattr( self.obj2, k ) for k in self.columns }
         self.dict3 = { 'id': uuid.uuid4(),
                        'provenance_id': stupid_provenance,
-                       'collection': 'coll3',
-                       'subset': 'sub3',
                        'pointing': 3,
                        'sca': 3,
                        'filter': 'c',

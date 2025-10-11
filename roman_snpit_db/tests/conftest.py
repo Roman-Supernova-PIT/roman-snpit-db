@@ -75,8 +75,8 @@ def stupid_object( stupid_provenance ):
     try:
         objid = uuid.uuid4()
         with DBCon() as con:
-            con.execute_nofetch( "INSERT INTO diaobject(id,provenance_id,name,collection) "
-                                 "VALUES(%(id)s,%(provid)s,'foo','bar')",
+            con.execute_nofetch( "INSERT INTO diaobject(id,provenance_id,name,iauname) "
+                                 "VALUES(%(id)s,%(provid)s,'foo','SN2025foo')",
                                  { 'id': objid, 'provid': stupid_provenance } )
             con.commit()
         yield objid
