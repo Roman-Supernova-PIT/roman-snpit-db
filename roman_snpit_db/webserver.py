@@ -220,6 +220,20 @@ class ProvenancesForTag( BaseProvenance ):
 
 # ======================================================================
 
+class GetDiaObject( BaseView ):
+    def do_the_things( self, diaobjectid ):
+        return "Not implemented", 500
+
+
+# ======================================================================
+
+class FindDiaObjects( BaseView ):
+    def do_the_things( self, provid ):
+        return "Not implemented", 500
+
+
+# ======================================================================
+
 urls = {
     "/": MainPage,
     "/test/<param>": TestEndpoint,
