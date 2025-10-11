@@ -229,5 +229,8 @@ urls = {
     "/createprovenance": CreateProvenance,
     "/tagprovenance/<tag>/<process>/<provid>": TagProvenance,
     "/tagprovenance/<tag>/<process>/<provid>/<int:replace>": TagProvenance,
-    "/provenancesfortag/<tag>": ProvenancesForTag
+    "/provenancesfortag/<tag>": ProvenancesForTag,
+
+    "/getdiaobject/<diaobjectid>": GetDiaObject,
+    "/finddiaobjects/<provid>": FindDiaObjects,
 }
